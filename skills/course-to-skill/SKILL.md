@@ -1,7 +1,7 @@
 ---
 name: course-to-skill
 description: Mengubah folder mata kuliah (slide PDF/PPTX, catatan kuliah, worksheet, soal, silabus) menjadi skill per mata kuliah yang menjawab dengan rujukan nomor slide, misalnya /data-science untuk KASDAD. Membangun korpus berhash dengan ekstrak teks per halaman, peta materi, lembar rumus, pola ujian, lalu memasang skill secara global. Juga membuat mindmap xmind multi-sheet dengan catatan isi slide, aplikasi web simulasi ujian (set soal JSON dan perender HTML), dan catatan ujian A4 bolak-balik untuk ditulis tangan. Pakai saat pengguna menyebut course-to-skill, "jadikan mata kuliah ini skill", "buat skill dari materi kuliah", atau meminta mindmap, simulasi ujian, atau catatan ujian dari materi kuliah.
-argument-hint: "[buat <folder kuliah> | update <skill> | mindmap <skill> <cakupan> | simulasi <skill> <cakupan> | catatan <skill> <cakupan> | audit <skill>]"
+argument-hint: "[buat <folder kuliah> | update <skill> | mindmap <skill> <cakupan> [--isi penjelasan|ringkasan] [--alur kronologi|konsep] | simulasi <skill> <cakupan> | catatan <skill> <cakupan> | audit <skill>]"
 ---
 
 # /course-to-skill
@@ -16,7 +16,7 @@ Contoh hidup hasil skill ini adalah `/data-science` (produk `kasdad`). Baca `ref
 |---|---|
 | `scripts/new_course.py` | Membuat produk mata kuliah baru: folder, `topics.json` dari slide `[NN]`, skill dari template, symlink |
 | `scripts/sync_sources.py` | Menyalin materi berdasarkan SHA-256, tanpa menghapus versi lama; ekstrak teks per halaman; `--check` |
-| `scripts/build_mindmap.py` | Membangun xmind multi-sheet; konsep jadi Definisi, Kapan, Langkah; catatan berisi teks slide |
+| `scripts/build_mindmap.py` | Membangun xmind multi-sheet dengan opsi `--isi` dan `--alur`; konsep dipecah ke elemen penjelasan yang dipilih; catatan berisi teks slide |
 | `scripts/build_exam_app.py` | Memvalidasi set soal JSON dan memasang aplikasi simulasi ujian |
 | `scripts/build_notes_a4.py` | Mengompilasi catatan A4 LaTeX dan memastikan tepat 2 halaman |
 | `assets/exam-app/index.html` | Perender simulasi ujian: pembahasan di samping soal, timer, autograde, rubrik essay, tema terang/gelap |
@@ -64,10 +64,12 @@ Lalu spot-check 20 sampai 30 rujukan secara otomatis, yaitu kata kunci harus ada
 Jalankan mode **tambah materi** di skill mata kuliah itu: sinkronkan, petakan, baca, perbarui tiga referensi, `--check`, lalu commit.
 
 ### 3. Mindmap (`mindmap <command> <cakupan>`)
-Ikuti `references/mindmap-spec.md`. Tulis outline di `<produk>/mindmap/<nama>.json`, transkripsi gambar di `<produk>/mindmap/transkripsi.json`, lalu:
+**Jelaskan opsi lebih dulu.** Sebelum menyusun outline, tampilkan tabel opsi di `references/mindmap-spec.md` §1, lalu satu baris `Dipakai: --isi <nilai> --alur <nilai>`. Bila pengguna tidak menyebut opsi, pakai default (`penjelasan`, `kronologi`) lalu lanjutkan.
+
+Ikuti `references/mindmap-spec.md`. Tulis outline di `<produk>/mindmap/<nama>.json`, atau generator `gen_<nama>.py` bila outline diturunkan dari outline lain. Transkripsi gambar masuk ke `<produk>/mindmap/transkripsi.json`. Lalu:
 ```bash
 python3 scripts/build_mindmap.py <produk>/mindmap/<nama>.json --product <produk> \
-  --transkripsi <produk>/mindmap/transkripsi.json -o <folder output>/mindmap_<nama>.xmind
+  --transkripsi <produk>/mindmap/transkripsi.json --isi <isi> --alur <alur> -o <folder output>/mindmap_<nama>.xmind
 ```
 Ulangi sampai semua sheet `LOLOS` dan tidak ada halaman bergambar yang belum ditranskripsi.
 

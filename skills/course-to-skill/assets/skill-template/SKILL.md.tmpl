@@ -1,7 +1,7 @@
 ---
 name: {{COMMAND}}
 description: Skill {{COURSE_TITLE}} ({{COURSE_CODE}}). Menjelaskan konsep, mengerjakan dan memeriksa soal, membuat latihan, mindmap xmind multi-sheet, simulasi ujian berbasis web, dan catatan ujian A4, semuanya bersumber dari slide dan catatan kuliah dengan rujukan nomor slide. Pakai saat pengguna mengetik /{{COMMAND}}, menyebut {{COURSE_KEYWORDS}}, atau bertanya tentang materinya. Juga dipakai untuk menambah materi kuliah baru ke korpus.
-argument-hint: "[pertanyaan | jelaskan <konsep> | kerjakan <soal> | periksa <jawaban> | latihan <topik> | mindmap <topik> | simulasi <cakupan> | catatan <cakupan> | tambah materi]"
+argument-hint: "[pertanyaan | jelaskan <konsep> | kerjakan <soal> | periksa <jawaban> | latihan <topik> | mindmap <topik> [--isi penjelasan|ringkasan] [--alur kronologi|konsep] | simulasi <cakupan> | catatan <cakupan> | tambah materi]"
 ---
 
 # /{{COMMAND}}, skill {{COURSE_TITLE}}
@@ -54,7 +54,7 @@ Nilai per butir: benar, sebagian, salah. Tunjukkan langkah pertama yang menyimpa
 Soal baru bergaya worksheet dengan data baru, kunci dihitung Python, rujukan slide per soal.
 
 ### 5. Mindmap
-Ikuti `course-to-skill/references/mindmap-spec.md`: satu sheet per topik, tiap konsep berisi Definisi, Kapan, Langkah, dan catatan slide otomatis. Simpan outline di `mindmap/`, bangun dengan `course-to-skill/scripts/build_mindmap.py --product {{PRODUCT_DIR}}`.
+Ikuti `course-to-skill/references/mindmap-spec.md`. Jelaskan dulu dua opsi bentuknya (`--isi penjelasan|ringkasan`, `--alur kronologi|konsep`, default penjelasan dan kronologi) dengan tabel di §1 spesifikasi itu, lalu sebutkan nilai yang dipakai. Tiap konsep berisi elemen penjelasan yang dipilih sesuai jenisnya, dan catatan slide terisi otomatis. Simpan outline di `mindmap/`, bangun dengan `course-to-skill/scripts/build_mindmap.py --product {{PRODUCT_DIR}} --isi <isi> --alur <alur>`.
 
 ### 6. Simulasi ujian
 Ikuti `course-to-skill/references/exam-set-schema.md`. Tulis generator Python di `exams/` yang menghitung semua kunci, hasilkan `exams/<id>.json`, lalu `build_exam_app.py build exams/<id>.json --out <folder output>/simulasi-<id> --inline <folder output>/simulasi-<id>.html`.
