@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Set soal default bila URL tidak memakai ?set=<id>. Diganti oleh build_exam_app.py. -->
+<meta name="exam-default-set" content="__DEFAULT_SET__">
+<title>Simulasi Ujian</title>
+<script>
+// Terapkan tema sedini mungkin agar tidak berkedip. Nilai: "light", "dark", atau "system".
+(function(){ try{ const t = localStorage.getItem('exam-sim:theme'); if(t==='light'||t==='dark') document.documentElement.dataset.theme = t; }catch(e){} })();
+</script>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--ink:#1d2330;--muted:#5f6b7a;--line:#dfe3ea;--accent:#2f5bd3;--ok:#1f8a4c;--bad:#c23b3b;--warn:#b7791f;--sol:#f3f6ff;color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14171d;--card:#1c2029;--ink:#e6e9ef;--muted:#9aa4b2;--line:#2c3240;--accent:#7c9cff;--ok:#4cc38a;--bad:#ff7b7b;--warn:#f0b35a;--sol:#1f2533;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#14171d;--card:#1c2029;--ink:#e6e9ef;--muted:#9aa4b2;--line:#2c3240;--accent:#7c9cff;--ok:#4cc38a;--bad:#ff7b7b;--warn:#f0b35a;--sol:#1f2533;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{position:sticky;top:0;z-index:5;background:var(--card);border-bottom:1px solid var(--line);padding:10px 16px;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+header h1{font-size:16px;margin:0;flex:1 1 260px}
+.timer{font:600 20px/1 ui-monospace,Menlo,monospace;padding:6px 10px;border:1px solid var(--line);border-radius:8px}
+.timer.low{color:var(--bad);border-color:var(--bad)}
+button,.btn{font:inherit;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:8px;padding:6px 12px;cursor:pointer}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+button:hover,.btn:hover{filter:brightness(.97)}
+.wrap{display:grid;grid-template-columns:220px 1fr;gap:16px;max-width:1500px;margin:0 auto;padding:16px}
+nav{position:sticky;top:70px;align-self:start;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px;max-height:calc(100vh - 90px);overflow:auto}
+nav h3{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin:8px 0 6px}
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:4px}
+.grid a{display:block;text-align:center;font-size:12px;padding:4px 0;border:1px solid var(--line);border-radius:6px;color:var(--ink);text-decoration:none}
+.grid a.done{background:var(--accent);color:#fff;border-color:var(--accent)}
+.grid a.right{background:var(--ok);color:#fff;border-color:var(--ok)}
+.grid a.wrong{background:var(--bad);color:#fff;border-color:var(--bad)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 16px;margin-bottom:16px}
+.card li{margin:2px 0}
+.case{border-left:4px solid var(--accent)}
+.case h3{margin:0 0 6px}
+.q{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:14px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:14px;scroll-margin-top:80px}
+.q h4{margin:0 0 6px;font-size:13px;color:var(--muted);font-weight:600}
+.q .prompt{margin-bottom:10px}
+.opts label{display:flex;gap:8px;align-items:flex-start;padding:4px 6px;border-radius:6px;cursor:pointer}
+.opts label:hover{background:var(--bg)}
+input[type=text],textarea{width:100%;font:inherit;padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink)}
+textarea{min-height:140px}
+.verdict{margin-top:8px;font-weight:600}
+.verdict.ok{color:var(--ok)}.verdict.bad{color:var(--bad)}.verdict.part{color:var(--warn)}
+details.sol{background:var(--sol);border:1px solid var(--line);border-radius:8px;padding:8px 12px;align-self:start}
+details.sol summary{cursor:pointer;font-weight:600;color:var(--accent)}
+details.sol .key{margin:8px 0;padding:6px 8px;border-left:3px solid var(--ok);background:var(--card)}
+details.sol .src{font-size:12px;color:var(--muted);margin-top:8px}
+table.t{border-collapse:collapse;margin:6px 0;font-size:14px}
+table.t th,table.t td{border:1px solid var(--line);padding:3px 8px;text-align:center}
+.rub{margin-top:8px}.rub div{display:flex;gap:8px;align-items:center;margin:4px 0;font-size:14px}
+.rub select{font:inherit;background:var(--card);color:var(--ink)}
+#result{border:2px solid var(--accent);display:none}
+#result table{border-collapse:collapse}#result td,#result th{padding:2px 10px;border-bottom:1px solid var(--line);text-align:left}
+.muted{color:var(--muted);font-size:13px}
+#loader{max-width:720px;margin:48px auto;padding:0 16px}
+@media (max-width:900px){.wrap{grid-template-columns:1fr}nav{position:static;max-height:none}.q{grid-template-columns:1fr}}
+@media print{header,nav{display:none}.wrap{display:block}details.sol{display:none}}
+</style>
+</head>
+<body>
+<header>
+  <h1 id="title">Simulasi Ujian</h1>
+  <span class="timer" id="timer">--:--</span>
+  <button id="btnStart" class="primary">Mulai timer</button>
+  <button id="btnSubmit">Nilai jawaban</button>
+  <button id="btnOpenAll" title="Buka atau tutup semua pembahasan">Buka semua pembahasan</button>
+  <button id="btnExport">Unduh jawaban</button>
+  <button id="btnReset">Reset</button>
+  <label class="btn" title="Muat set soal JSON lain dari disk">Buka set JSON<input type="file" id="filePick" accept=".json,application/json" hidden></label>
+  <button id="btnTheme" title="Ganti tema">Tema: sistem</button>
+</header>
+<div id="loader" class="card" style="display:none"></div>
+<div class="wrap" id="app" style="display:none">
+  <nav id="nav"></nav>
+  <main>
+    <div id="result" class="card"></div>
+    <div class="card" id="rules"></div>
+    <div id="qs"></div>
+  </main>
+</div>
+<!-- Untuk versi satu berkas, build_exam_app.py --inline menyisipkan JSON set di sini. -->
+<script id="exam-data" type="application/json">/*EXAM_DATA*/</script>
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* ---------- Tema terang/gelap ---------- */
+const THEMES = ['system', 'light', 'dark'], THEME_LABEL = {system:'sistem', light:'terang', dark:'gelap'};
+function getTheme(){ try{ return localStorage.getItem('exam-sim:theme') || 'system'; }catch(e){ return 'system'; } }
+function applyTheme(t){ if(t==='system') delete document.documentElement.dataset.theme; else document.documentElement.dataset.theme = t;
+  $('#btnTheme').textContent = 'Tema: ' + THEME_LABEL[t]; try{ localStorage.setItem('exam-sim:theme', t); }catch(e){} }
+let THEME = getTheme();
+$('#btnTheme').onclick = () => { THEME = THEMES[(THEMES.indexOf(THEME) + 1) % THEMES.length]; applyTheme(THEME); };
+applyTheme(THEME);
+
+/* ---------- Pemuatan set soal ----------
+   1. JSON yang disisipkan di #exam-data (versi satu berkas).
+   2. http(s): fetch sets/<id>.json.
+   3. file://: muat sets/<id>.js, bungkus JSON yang ditulis build_exam_app.py.
+   4. Bila semua gagal: minta pengguna memilih berkas JSON. */
+function loadScript(src){ return new Promise((ok, no) => { const s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = no; document.head.appendChild(s); }); }
+async function boot(){
+  const inline = document.getElementById('exam-data').textContent.trim();
+  if(inline && !inline.startsWith('/*')) return start(JSON.parse(inline));
+  const id = new URLSearchParams(location.search).get('set') || document.querySelector('meta[name=exam-default-set]').content;
+  if(/^https?:/.test(location.protocol)){
+    try{ const r = await fetch(`sets/${encodeURIComponent(id)}.json`, {cache:'no-store'}); if(r.ok) return start(await r.json()); }catch(e){}
+  }
+  try{ await loadScript(`sets/${encodeURIComponent(id)}.js`); if(window.EXAM_SETS && window.EXAM_SETS[id]) return start(window.EXAM_SETS[id]); }catch(e){}
+  const L = $('#loader'); L.style.display = 'block';
+  L.innerHTML = `<h2>Set soal belum termuat</h2><p>Set <code>${esc(id)}</code> tidak ditemukan. Pilih salah satu cara:</p>
+    <ol><li>Klik <b>Buka set JSON</b> di atas lalu pilih berkas <code>sets/&lt;id&gt;.json</code>.</li>
+    <li>Jalankan <code>python3 -m http.server</code> di folder ini, lalu buka <code>http://localhost:8000/?set=&lt;id&gt;</code>.</li>
+    <li>Buat ulang bungkus <code>.js</code> dengan <code>build_exam_app.py</code>.</li></ol>`;
+}
+$('#filePick').onchange = e => { const f = e.target.files[0]; if(!f) return; const rd = new FileReader();
+  rd.onload = () => { try{ start(JSON.parse(rd.result)); }catch(err){ alert('JSON tidak valid: ' + err.message); } }; rd.readAsText(f); };
+
+/* ---------- Aplikasi ujian ---------- */
+let EXAM, KEY, st, ticker;
+function start(exam){
+  EXAM = exam; KEY = 'exam-sim:' + EXAM.id;
+  st = load() || {answers:{}, rubric:{}, startedAt:null, elapsed:0, graded:false};
+  $('#loader').style.display = 'none'; $('#app').style.display = 'grid';
+  document.title = EXAM.title; $('#title').textContent = EXAM.title;
+  $('#rules').innerHTML = '<b>Aturan</b><ul>' + (EXAM.rules||[]).map(r => '<li>' + r + '</li>').join('') + '</ul>' +
+    '<div class="muted">Klik “Cara pengerjaan & jawaban” di samping soal untuk membuka pembahasan. Jawaban tersimpan otomatis di browser ini.</div>';
+  $('#result').style.display = 'none';
+  render(); $('#btnStart').textContent = st.startedAt ? 'Jeda timer' : (st.elapsed ? 'Lanjutkan timer' : 'Mulai timer');
+  if(st.graded) showResult(); tick(); clearInterval(ticker); ticker = setInterval(tick, 1000);
+}
+function load(){ try{ return JSON.parse(localStorage.getItem(KEY)); }catch(e){ return null; } }
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(st)); }catch(e){} }
+function parseNum(v){ if(v==null) return NaN; v = String(v).trim().replace(/\s/g,''); if(v.includes(',') && !v.includes('.')) v = v.replace(',', '.'); else v = v.replace(/,/g,''); return v==='' ? NaN : Number(v); }
+function tolOf(q){ const d = q.decimals ?? 4; return q.tolerance ?? Math.max(0.5*Math.pow(10,-d) + 1e-9, Math.abs(q.answer)*0.001); }
+function grade(q){
+  const a = st.answers[q.id];
+  if(q.kind==='num'){ const x = parseNum(a); if(isNaN(x)) return {s:0,state:'empty'}; const ok = Math.abs(x-q.answer) <= tolOf(q); return {s:ok?1:0, state:ok?'ok':'bad'}; }
+  if(q.kind==='mc'){ if(a==null) return {s:0,state:'empty'}; return a===q.answer ? {s:1,state:'ok'} : {s:0,state:'bad'}; }
+  if(q.kind==='multi'){ const sel = a||[]; if(!sel.length) return {s:0,state:'empty'}; const right = sel.filter(i=>q.answer.includes(i)).length, wrong = sel.length-right;
+    const s = Math.max(0,(right-wrong)/q.answer.length); return {s, state:s===1?'ok':(s>0?'part':'bad')}; }
+  if(q.kind==='essay'){ const r = st.rubric[q.id]||{}; const n = q.rubric.length; let sum = 0, any = false; for(let i=0;i<n;i++){ if(r[i]!=null && r[i]!==''){ any = true; sum += Number(r[i]); } } return {s:sum/n, state:any?'self':'empty'}; }
+}
+function answered(q){ const a = st.answers[q.id]; if(q.kind==='multi') return a && a.length; if(q.kind==='mc') return a!=null; return a!=null && String(a).trim()!==''; }
+function render(){
+  let html = '', nav = '';
+  for(const sec of EXAM.sections){
+    const qs = EXAM.questions.filter(q=>q.section===sec.id);
+    html += `<h2>${esc(sec.title)} <span class="muted">(${sec.points} poin)</span></h2>`;
+    nav += `<h3>${esc(sec.title)}</h3><div class="grid">`;
+    let lastG = null;
+    qs.forEach(q=>{
+      const no = EXAM.questions.indexOf(q)+1;
+      if(q.group && q.group!==lastG){ lastG = q.group; const g = (EXAM.groups||[]).find(x=>x.id===q.group); if(g) html += `<div class="card case"><h3>${esc(g.title)}</h3>${g.stem}</div>`; }
+      nav += `<a href="#q-${q.id}" id="nav-${q.id}">${no}</a>`;
+      let input = '';
+      if(q.kind==='num') input = `<input type="text" inputmode="decimal" data-id="${q.id}" placeholder="Jawaban angka${q.decimals===0?' (bilangan bulat)':` (${q.decimals ?? 4} desimal)`}" value="${esc(st.answers[q.id]??'')}">`;
+      if(q.kind==='mc') input = '<div class="opts">'+q.options.map((o,i)=>`<label><input type="radio" name="${q.id}" data-id="${q.id}" value="${i}" ${st.answers[q.id]===i?'checked':''}> <span>${String.fromCharCode(97+i)}. ${o}</span></label>`).join('')+'</div>';
+      if(q.kind==='multi') input = '<div class="opts">'+q.options.map((o,i)=>`<label><input type="checkbox" data-id="${q.id}" value="${i}" ${(st.answers[q.id]||[]).includes(i)?'checked':''}> <span>${o}</span></label>`).join('')+'</div>';
+      if(q.kind==='essay') input = `<textarea data-id="${q.id}" placeholder="Tulis jawaban essay di sini">${esc(st.answers[q.id]??'')}</textarea>`;
+      let key = '', rub = '';
+      if(q.kind==='num') key = `Jawaban: <b>${q.answer}</b> <span class="muted">(toleransi ±${+tolOf(q).toPrecision(2)})</span>`;
+      if(q.kind==='mc') key = `Jawaban: <b>${String.fromCharCode(97+q.answer)}. ${q.options[q.answer]}</b>`;
+      if(q.kind==='multi') key = 'Jawaban: <b>' + q.answer.map(i=>q.options[i]).join('; ') + '</b>';
+      if(q.kind==='essay'){
+        key = '<b>Jawaban model:</b> ' + q.model_answer;
+        rub = '<div class="rub"><b>Nilai sendiri per kriteria</b>' + q.rubric.map((c,i)=>`<div><select data-rub="${q.id}" data-i="${i}"><option value="">–</option>${[0,0.5,1].map(v=>`<option value="${v}" ${String((st.rubric[q.id]||{})[i])===String(v)?'selected':''}>${v}</option>`).join('')}</select><span>${c}</span></div>`).join('') + '</div>';
+      }
+      html += `<section class="q" id="q-${q.id}">
+        <div><h4>Soal ${no} · ${esc(q.topic||'')} · ${+q.points.toFixed(4)} poin</h4><div class="prompt">${q.prompt}</div>${input}<div class="verdict" id="v-${q.id}"></div></div>
+        <details class="sol"><summary>Cara pengerjaan & jawaban</summary><div class="key">${key}</div><div>${q.solution}</div>${rub}<div class="src">Sumber: ${esc(q.source||'')}</div></details>
+      </section>`;
+    });
+    nav += '</div>';
+  }
+  $('#qs').innerHTML = html; $('#nav').innerHTML = nav;
+  document.querySelectorAll('[data-id]').forEach(el=>el.addEventListener(el.type==='text'||el.tagName==='TEXTAREA'?'input':'change', onInput));
+  document.querySelectorAll('[data-rub]').forEach(el=>el.addEventListener('change', e=>{ const id = e.target.dataset.rub; st.rubric[id] = st.rubric[id]||{}; st.rubric[id][e.target.dataset.i] = e.target.value; save(); if(st.graded) showResult(); }));
+  refreshNav();
+}
+function onInput(e){
+  const el = e.target, id = el.dataset.id, q = EXAM.questions.find(x=>x.id===id);
+  if(q.kind==='mc') st.answers[id] = Number(el.value);
+  else if(q.kind==='multi') st.answers[id] = [...document.querySelectorAll(`input[type=checkbox][data-id="${id}"]`)].filter(x=>x.checked).map(x=>Number(x.value));
+  else st.answers[id] = el.value;
+  save(); refreshNav(); if(st.graded) markOne(q);
+}
+function refreshNav(){ EXAM.questions.forEach(q=>{ const a = document.getElementById('nav-'+q.id); if(!a) return; a.className = '';
+  if(st.graded && q.kind!=='essay'){ const g = grade(q); a.className = g.state==='ok'?'right':(g.state==='empty'?'':'wrong'); } else if(answered(q)) a.className = 'done'; }); }
+function markOne(q){ const v = document.getElementById('v-'+q.id); if(!v) return; if(q.kind==='essay'){ v.textContent = ''; return; } const g = grade(q);
+  v.className = 'verdict '+(g.state==='ok'?'ok':g.state==='part'?'part':'bad');
+  v.textContent = g.state==='ok'?'Benar':g.state==='part'?`Sebagian benar (${(g.s*100).toFixed(0)}%)`:g.state==='empty'?'Belum dijawab':'Salah'; }
+function showResult(){
+  let tot = 0, max = 0; const bySec = {}, byTopic = {};
+  EXAM.questions.forEach(q=>{ const g = grade(q), p = q.points*g.s; tot += p; max += q.points;
+    bySec[q.section] = bySec[q.section]||[0,0]; bySec[q.section][0] += p; bySec[q.section][1] += q.points;
+    if(q.kind!=='essay'){ byTopic[q.topic] = byTopic[q.topic]||[0,0]; byTopic[q.topic][0] += g.s===1?1:0; byTopic[q.topic][1]++; } });
+  const r = $('#result'); r.style.display = 'block';
+  r.innerHTML = `<h2 style="margin:0 0 6px">Nilai: ${tot.toFixed(2)} / ${max.toFixed(0)}</h2>` +
+    EXAM.sections.map(s=>`<div>${esc(s.title)}: <b>${(bySec[s.id]?.[0]||0).toFixed(2)}</b> / ${(bySec[s.id]?.[1]||0).toFixed(2)}</div>`).join('') +
+    '<table style="margin-top:8px"><tr><th>Topik</th><th>Benar penuh</th></tr>' + Object.entries(byTopic).map(([t,v])=>`<tr><td>${esc(t)}</td><td>${v[0]} / ${v[1]}</td></tr>`).join('') + '</table>' +
+    `<div class="muted">Waktu terpakai: ${fmt(elapsed())}. Nilai essay berasal dari rubrik yang Anda isi sendiri.</div>`;
+  EXAM.questions.forEach(markOne); refreshNav();
+}
+function elapsed(){ return st.elapsed + (st.startedAt ? (Date.now()-st.startedAt)/1000 : 0); }
+function fmt(s){ s = Math.max(0,Math.round(s)); const h = Math.floor(s/3600), m = Math.floor(s%3600/60), x = s%60; return (h?h+':':'')+String(m).padStart(2,'0')+':'+String(x).padStart(2,'0'); }
+function tick(){ if(!EXAM) return; const left = EXAM.duration_minutes*60 - elapsed(); const t = $('#timer'); t.textContent = fmt(left); t.classList.toggle('low', left<600);
+  if(left<=0 && st.startedAt){ pause(); st.graded = true; save(); showResult(); alert('Waktu habis. Jawaban dinilai.'); } }
+function pause(){ if(st.startedAt){ st.elapsed = elapsed(); st.startedAt = null; save(); } $('#btnStart').textContent = 'Lanjutkan timer'; }
+$('#btnStart').onclick = () => { if(!EXAM) return; if(st.startedAt) pause(); else { st.startedAt = Date.now(); save(); $('#btnStart').textContent = 'Jeda timer'; } };
+$('#btnSubmit').onclick = () => { if(!EXAM) return; st.graded = true; pause(); save(); showResult(); window.scrollTo({top:0,behavior:'smooth'}); };
+$('#btnOpenAll').onclick = () => { const ds = [...document.querySelectorAll('details.sol')]; const open = !ds.every(d=>d.open); ds.forEach(d=>d.open = open); $('#btnOpenAll').textContent = open ? 'Tutup semua pembahasan' : 'Buka semua pembahasan'; };
+$('#btnReset').onclick = () => { if(EXAM && confirm('Hapus semua jawaban dan reset timer?')){ st = {answers:{},rubric:{},startedAt:null,elapsed:0,graded:false}; save(); start(EXAM); } };
+$('#btnExport').onclick = () => { if(!EXAM) return; const blob = new Blob([JSON.stringify({exam:EXAM.id, exported_at:new Date().toISOString(), elapsed_seconds:Math.round(elapsed()), answers:st.answers, rubric:st.rubric}, null, 1)], {type:'application/json'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `jawaban-${EXAM.id}.json`; a.click(); };
+boot();
+</script>
+</body>
+</html>

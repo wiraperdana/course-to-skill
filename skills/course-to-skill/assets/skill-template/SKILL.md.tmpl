@@ -1,0 +1,74 @@
+---
+name: {{COMMAND}}
+description: Skill {{COURSE_TITLE}} ({{COURSE_CODE}}). Menjelaskan konsep, mengerjakan dan memeriksa soal, membuat latihan, mindmap xmind multi-sheet, simulasi ujian berbasis web, dan catatan ujian A4, semuanya bersumber dari slide dan catatan kuliah dengan rujukan nomor slide. Pakai saat pengguna mengetik /{{COMMAND}}, menyebut {{COURSE_KEYWORDS}}, atau bertanya tentang materinya. Juga dipakai untuk menambah materi kuliah baru ke korpus.
+argument-hint: "[pertanyaan | jelaskan <konsep> | kerjakan <soal> | periksa <jawaban> | latihan <topik> | mindmap <topik> | simulasi <cakupan> | catatan <cakupan> | tambah materi]"
+---
+
+# /{{COMMAND}}, skill {{COURSE_TITLE}}
+
+Skill ini menjawab dari **korpus kuliah {{COURSE_TITLE}}**, bukan dari ingatan umum. Jawaban harus bisa ditunjuk ke slide yang dipakai di kelas, karena ujian menilai versi materi yang diajarkan dosen, termasuk konvensi notasinya.
+
+## Letak korpus
+
+Root produk: `{{PRODUCT_DIR}}`. Folder kuliah sumber kebenaran: `{{COURSE_DIR}}`. Alat bersama ada di skill `course-to-skill` (`~/.claude/skills/course-to-skill/`).
+
+| Berkas | Isi |
+|---|---|
+| `sources/manifest.json` | Inventaris sumber: `id`, `topics`, `kind`, `path`, `text_path`, `sha256` |
+| `sources/text/<id>.txt` | Ekstrak teks per halaman dengan penanda `[Halaman N]`. `[TANPA TEKS]` berarti baca halaman itu sebagai gambar. |
+| `sources/files/` | Salinan asli slide, catatan, worksheet, soal, jawaban |
+| `sources/topics.json` | Aturan pemetaan berkas ke topik |
+| `references/course-map.md` | Peta topik ke halaman slide. **Baca lebih dulu.** |
+| `references/formulas.md` | Rumus per topik dengan angka kontrol dari slide |
+| `references/exam-patterns.md` | Bentuk soal, sinyal dosen, tabel selisih sumber |
+| `exams/`, `mindmap/`, `notes-a4/` | Set simulasi, outline mindmap dan transkripsi gambar, sumber catatan A4 |
+
+## Hierarki sumber
+
+1. **Slide** adalah sumber utama. Rujuk sebagai `[NN] sX`.
+2. **Catatan kelas** memberi penekanan dosen. Beri label "catatan kelas". Tip, prediksi ujian, dan rumus yang direkonstruksi dari ucapan bukan kunci jawaban.
+3. **Worksheet, soal, jawaban** menunjukkan bentuk soal dan konvensi pembulatan. Set buatan sendiri bukan soal resmi.
+4. **Di luar korpus** hanya dengan label **di luar materi kuliah**.
+
+Bila sumber bertentangan, laporkan dan catat di `exam-patterns.md`. Jangan memilih diam-diam.
+
+## Langkah umum
+
+1. Tentukan topik lewat `course-map.md`. Bila materinya belum ada di korpus, katakan, lalu tawarkan **tambah materi**.
+2. Buka `text_path` di halaman yang ditunjuk. Cari istilah dengan `grep -n -i "<istilah>" sources/text/*.txt`.
+3. Halaman `[TANPA TEKS]` atau rumus yang hilang: render dengan `pdftoppm -png -r 110 -f N -l N <pdf> /tmp/hal`, lalu baca gambarnya.
+4. Jawab sesuai mode, dengan rujukan per klaim penting.
+
+## Mode
+
+### 1. Jelaskan
+Definisi singkat (rujukan), kapan dipakai dan kapan tidak, langkah matematis dengan satu contoh angka (utamakan angka kontrol slide), lalu jebakan umum.
+
+### 2. Kerjakan soal
+Baca soal sampai habis, catat aturan pembulatan dan pembagi. Kerjakan langkah demi langkah, hitung ulang dengan Python, lakukan cek silang, akhiri dengan tingkat keyakinan.
+
+### 3. Periksa jawaban
+Nilai per butir: benar, sebagian, salah. Tunjukkan langkah pertama yang menyimpang.
+
+### 4. Latihan
+Soal baru bergaya worksheet dengan data baru, kunci dihitung Python, rujukan slide per soal.
+
+### 5. Mindmap
+Ikuti `course-to-skill/references/mindmap-spec.md`: satu sheet per topik, tiap konsep berisi Definisi, Kapan, Langkah, dan catatan slide otomatis. Simpan outline di `mindmap/`, bangun dengan `course-to-skill/scripts/build_mindmap.py --product {{PRODUCT_DIR}}`.
+
+### 6. Simulasi ujian
+Ikuti `course-to-skill/references/exam-set-schema.md`. Tulis generator Python di `exams/` yang menghitung semua kunci, hasilkan `exams/<id>.json`, lalu `build_exam_app.py build exams/<id>.json --out <folder output>/simulasi-<id> --inline <folder output>/simulasi-<id>.html`.
+
+### 7. Catatan ujian A4
+Ikuti `course-to-skill/references/notes-a4-guide.md`. Sumber di `notes-a4/<nama>.tex`, kompilasi dengan `build_notes_a4.py` sampai tepat 2 halaman.
+
+### 8. Tambah materi
+1. `python3 scripts/sync_sources.py --course-dir '{{COURSE_DIR}}'` dari root produk.
+2. Petakan berkas `unassigned` di `sources/topics.json`, jalankan ulang.
+3. Baca seluruh materi baru termasuk halaman bergambar.
+4. Perbarui `course-map.md`, `formulas.md`, `exam-patterns.md`.
+5. `--check` sampai `0 masalah`, lalu commit.
+
+## Gaya dan larangan
+
+Ikuti aturan gaya global pengguna. Definisikan istilah teknis pada pemakaian pertama. Jangan mengarang nomor slide, jangan menyajikan isi luar korpus sebagai materi kuliah, jangan menyalin slide panjang-panjang, dan jangan menghapus `sources/files/`.

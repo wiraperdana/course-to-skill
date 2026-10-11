@@ -1,0 +1,41 @@
+\documentclass[8pt]{extarticle}
+\usepackage[a4paper,margin=6mm,top=6mm,bottom=7mm]{geometry}
+\usepackage{multicol,amsmath,amssymb}
+\usepackage[T1]{fontenc}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage{array}
+\setlength{\columnsep}{3.5mm}
+\setlength{\columnseprule}{0.2pt}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.6pt}
+\pagestyle{empty}
+\setlist{nosep,leftmargin=3mm,label=\textbullet}
+\newcommand{\sect}[1]{\par\vspace{1.5pt}\colorbox{black!12}{\parbox{\dimexpr\columnwidth-2\fboxsep}{\textbf{#1}}}\par\vspace{0.8pt}}
+\newcommand{\sub}[1]{\textbf{#1}\;}
+\renewcommand{\arraystretch}{1.05}
+\begin{document}
+\fontsize{7.9}{9.0}\selectfont\raggedright\setlength{\emergencystretch}{1em}
+%% ==== SISI 1 ====
+\begin{multicols*}{3}
+\textbf{__JUDUL__} \hfill \textit{sisi 1 / 2, salin tulisan tangan}\par
+\sect{0. Aturan main hitungan}
+\begin{itemize}
+\item Pembulatan, pembagi ($n-1$ atau $N$), kelas positif, konstanta ($\log_2x=\ln x/0{,}6931$), larangan dan cek silang khas mata kuliah ini.
+\end{itemize}
+\sect{a. Topik pertama}
+\begin{itemize}
+\item Definisi singkat, rumus dengan simbol slide, aturan keputusan, angka kontrol.
+\end{itemize}
+%% Tambah \sect{...} per topik. Utamakan yang mahal diturunkan ulang saat ujian.
+\end{multicols*}
+\newpage
+%% ==== SISI 2 ====
+\begin{multicols*}{3}
+\textbf{__JUDUL__} \hfill \textit{sisi 2 / 2}\par
+\sect{Urutan isian soal berantai}
+\begin{itemize}
+\item Urutan langkah tiap tipe soal worksheet, dari input sampai jawaban akhir.
+\end{itemize}
+\end{multicols*}
+\end{document}
