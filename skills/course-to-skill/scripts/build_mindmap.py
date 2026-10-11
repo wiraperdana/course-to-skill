@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """Bangun mindmap .xmind multi-sheet dari outline konsep, dengan catatan isi slide.
 
-Setiap konsep otomatis dipecah menjadi tiga cabang: Definisi, Kapan, Langkah.
+Setiap konsep dipecah menjadi cabang elemen penjelasan yang diisi saja, dari
+katalog 12 elemen opsional: Definisi, Jenis/komponen, Tujuan, Kapan, Asumsi,
+Langkah, Contoh, Interpretasi, Pembeda, Kelebihan/kekurangan, Jebakan, Catatan.
 Setiap node konsep diberi catatan Xmind berisi rujukan slide dan teks slide
 yang dirujuk, ditarik dari korpus produk mata kuliah (sources/manifest.json).
 Halaman yang isinya hanya gambar diisi dari berkas transkripsi; yang belum
@@ -17,8 +19,9 @@ Format outline (lihat references/mindmap-spec.md):
     {"sheets": [
       {"title": "a. Topik", "children": [
         {"title": "Kelompok", "children": [
-          {"concept": "Nama konsep", "definisi": "...", "kapan": "...",
+          {"concept": "Nama konsep", "definisi": "...", "tujuan": "...",
            "langkah": "satu kalimat" | ["langkah 1", "langkah 2"],
+           "contoh": "...", "jebakan": "...",
            "sumber": "[05] s41-45; catatan sesi 5"}
         ]}
       ]}
@@ -42,17 +45,40 @@ from pathlib import Path
 KATA = {1: 5, 2: 5, 3: 10, 4: 10}
 
 
+# Katalog elemen penjelasan. Semuanya opsional; pilih yang relevan dengan jenis
+# konsep (lihat references/mindmap-spec.md). Urutan di sini = urutan tampil.
+ELEMENTS = [
+    ("definisi", "Definisi"), ("jenis", "Jenis/komponen"), ("tujuan", "Tujuan"), ("kapan", "Kapan"),
+    ("asumsi", "Asumsi"), ("langkah", "Langkah"), ("contoh", "Contoh"), ("interpretasi", "Interpretasi"),
+    ("pembeda", "Pembeda"), ("plusminus", "Kelebihan/kekurangan"), ("jebakan", "Jebakan"), ("catatan", "Catatan"),
+]
+LIST_TITLE = {"langkah": "Langkah matematis"}
+
+
 def expand(node: dict) -> dict:
-    """Ubah konsep {concept, definisi, kapan, langkah, sumber} menjadi node bertiga cabang."""
+    """Ubah konsep menjadi node dengan cabang elemen yang diisi saja.
+
+    Nilai string menjadi satu label "Elemen: isi". Nilai daftar menjadi node
+    elemen dengan anak per butir (level 4), misalnya langkah bertahap."""
     if "concept" not in node:
         out = {"title": node["title"]}
         if node.get("children"):
             out["children"] = [expand(c) for c in node["children"]]
         return out
-    anak = [{"title": "Definisi: " + node["definisi"]}, {"title": "Kapan: " + node["kapan"]}]
-    lk = node["langkah"]
-    anak.append({"title": "Langkah matematis", "children": [{"title": s} for s in lk]} if isinstance(lk, list)
-                else {"title": "Langkah: " + lk})
+    unknown = set(node) - {k for k, _ in ELEMENTS} - {"concept", "sumber"}
+    if unknown:
+        raise SystemExit(f"Elemen tidak dikenal pada '{node['concept']}': {sorted(unknown)}")
+    anak = []
+    for key, label in ELEMENTS:
+        val = node.get(key)
+        if not val:
+            continue
+        if isinstance(val, list):
+            anak.append({"title": LIST_TITLE.get(key, label), "children": [{"title": v} for v in val]})
+        else:
+            anak.append({"title": f"{label}: {val}"})
+    if len(anak) < 2:
+        raise SystemExit(f"Konsep '{node['concept']}' butuh minimal 2 elemen")
     return {"title": node["concept"], "children": anak, "sumber": node.get("sumber", "")}
 
 
