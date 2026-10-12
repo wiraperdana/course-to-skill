@@ -91,7 +91,8 @@ def main() -> int:
     shutil.copy2(HERE / "terbitkan_publik.sh", prod / "scripts" / "terbitkan_publik.sh")
     (prod / ".publik-kecuali").write_text(
         "# Path yang tidak ikut ke repo publik: materi pihak ketiga dan transkripsi slide.\n"
-        "sources/files\nsources/text\nmindmap/transkripsi.json\n", encoding="utf-8")
+        "sources/files\nsources/text\nmindmap/transkripsi.json\n"
+        "# Berkas taksonomi Personal-OS, tidak ikut repo publik.\nAGENTS.md\nCLAUDE.md\nSTATUS.md\n", encoding="utf-8")
     topics_cfg = {
         "schema_version": 1,
         "keterangan": "Peta topik. Tiap aturan mencocokkan potongan path relatif berkas di folder kuliah, huruf kecil. Berkas tanpa kecocokan menjadi 'unassigned' dan wajib dipetakan.",
