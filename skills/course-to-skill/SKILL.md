@@ -15,6 +15,7 @@ Contoh hidup hasil skill ini adalah `/data-science` (produk `kasdad`). Baca `ref
 | Berkas | Fungsi |
 |---|---|
 | `scripts/new_course.py` | Membuat produk mata kuliah baru: folder, `topics.json` dari slide `[NN]`, skill dari template, symlink |
+| `scripts/terbitkan_publik.sh` | Menerbitkan versi publik tanpa materi pihak ketiga ke remote `publik`, dengan riwayat publik sendiri |
 | `scripts/sync_sources.py` | Menyalin materi berdasarkan SHA-256, tanpa menghapus versi lama; ekstrak teks per halaman; `--check` |
 | `scripts/build_mindmap.py` | Membangun xmind multi-sheet dengan opsi `--isi` dan `--alur`; konsep dipecah ke elemen penjelasan yang dipilih; catatan berisi teks slide |
 | `scripts/build_exam_app.py` | Memvalidasi set soal JSON dan memasang aplikasi simulasi ujian |
@@ -56,7 +57,7 @@ Lalu spot-check 20 sampai 30 rujukan secara otomatis, yaitu kata kunci harus ada
 
 **Fase 5, pasang.** Pastikan symlink ada di `~/.claude/skills/<command>` dan `~/.agents/skills/<command>`. Di WiraOS: `python3 _system/scripts/codex_prompts.py --only <command>`, catat skill baru di daftar skill global `_memory/preferences.md`, dan simpan satu memori proyek.
 
-**Fase 6, git.** `git init` di produk, commit tanpa trailer atribusi bila pengguna melarangnya. Slide dosen berhak cipta, jadi bila diminta push, buat repo GitHub **private** (`gh repo create <owner>/<slug> --private --source . --push`). Di WiraOS, tambahkan `/Business/InnovationKit/Products/<slug>/` ke `.gitignore` root.
+**Fase 6, git.** `git init` di produk, commit tanpa trailer atribusi bila pengguna melarangnya. Slide dosen, worksheet, soal, dan catatan kelas adalah materi pihak ketiga, jadi **jangan pernah menerbitkannya**. Repo produk dipush sebagai **private** (`gh repo create <owner>/<slug> --private --source . --push`) dan menyimpan semuanya. Bila pengguna ingin versi publik, buat repo publik terpisah (misalnya `<command>-skill`), lalu `git remote add publik <url>` dan jalankan `scripts/terbitkan_publik.sh --cek`, lalu tanpa `--cek`. Skrip itu membangun commit publik dari HEAD tanpa path di `.publik-kecuali`, sehingga riwayat publik tidak pernah memuat materi. Periksa daftar `--cek` sebelum push. Di WiraOS, tambahkan `/Business/InnovationKit/Products/<slug>/` ke `.gitignore` root.
 
 **Fase 7, laporan.** Sampaikan lokasi produk dan skill, jumlah sumber, topik yang terpetakan, selisih sumber yang ditemukan, dan cara memanggil `/<command>`.
 

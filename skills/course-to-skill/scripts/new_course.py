@@ -10,6 +10,7 @@ Pemakaian:
 Hasil di <products-dir>/<slug>/:
     README.md, .gitignore
     scripts/sync_sources.py        salinan, bisa dijalankan tanpa course-to-skill
+    scripts/terbitkan_publik.sh    penerbit versi publik tanpa materi (.publik-kecuali)
     sources/topics.json            topik terdeteksi dari slide berawalan [NN]
     skills/<command>/SKILL.md      dari assets/skill-template
     skills/<command>/references/   course-map.md, formulas.md, exam-patterns.md (kerangka)
@@ -87,6 +88,10 @@ def main() -> int:
     for d in ["scripts", "sources", "exams", "mindmap", "notes-a4", sk / "references", sk / "agents"]:
         (prod / d if isinstance(d, str) else d).mkdir(parents=True, exist_ok=True)
     shutil.copy2(HERE / "sync_sources.py", prod / "scripts" / "sync_sources.py")
+    shutil.copy2(HERE / "terbitkan_publik.sh", prod / "scripts" / "terbitkan_publik.sh")
+    (prod / ".publik-kecuali").write_text(
+        "# Path yang tidak ikut ke repo publik: materi pihak ketiga dan transkripsi slide.\n"
+        "sources/files\nsources/text\nmindmap/transkripsi.json\n", encoding="utf-8")
     topics_cfg = {
         "schema_version": 1,
         "keterangan": "Peta topik. Tiap aturan mencocokkan potongan path relatif berkas di folder kuliah, huruf kecil. Berkas tanpa kecocokan menjadi 'unassigned' dan wajib dipetakan.",

@@ -31,7 +31,7 @@ Setiap butir di bawah pernah benar-benar terjadi. Butir-butir ini menjadi aturan
 ## Lingkungan WiraOS
 
 18. Sesi latar belakang menolak `Write` ke checkout bersama sebelum ada worktree. Folder produk diabaikan git root, jadi worktree tidak menjangkaunya. Tulis di staging lalu salin ke folder produk baru, dan laporkan caranya.
-19. Produk dengan slide berhak cipta dipasang sebagai repo GitHub **private**. Tambahkan baris pengecualian di `.gitignore` root.
+19. **Materi pihak ketiga tidak pernah terbit.** Repo produk private menyimpan semuanya. Versi publik dibuat lewat `scripts/terbitkan_publik.sh` ke repo publik terpisah, misalnya `data-science-skill` untuk KASDAD. Menghapus slide lalu membuka repo lama tidak cukup, karena slide tetap terbaca dari commit lama. Produk yang belum punya riwayat, seperti `information-system-management`, cukup mengabaikan folder materi di `.gitignore` sebelum commit pertama. Tambahkan juga baris pengecualian produk di `.gitignore` root.
 20. Pasang skill sebagai symlink di `~/.claude/skills` dan `~/.agents/skills`, lalu jalankan `python3 _system/scripts/codex_prompts.py --only <command>` agar `/<command>` muncul di Codex.
 21. Perintah garis miring mengikuti nama folder skill. Bila pengguna ingin nama produk berbeda dari perintah, nama folder skill = perintah, sedangkan nama folder produk = slug.
 22. **Elemen penjelasan dipilih, bukan dipaksakan.** Mindmap UTS versi pertama memaksa tiap konsep berisi Definisi, Kapan, dan Langkah. Akibatnya muncul "langkah matematis" untuk paradigma AI dan sifat lingkungan. Versi kedua memakai katalog 12 elemen opsional dengan aturan per jenis konsep: 149 konsep memakai 2 sampai 5 elemen, dan Langkah hanya muncul di 87 konsep. Lihat `mindmap-spec.md`.
